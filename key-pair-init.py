@@ -23,5 +23,5 @@ pem = public_key.public_bytes(
     format=serialization.PublicFormat.SubjectPublicKeyInfo
 )
 
-with open('server_public_key.pem', 'wb') as f:
+with open('server_public_key.pem', 'ab') as f:
     f.write(pem)
