@@ -1,6 +1,13 @@
 import threading
 from core.utils.custom_logger import Log
 from core.utils.str_byte_conversion import str2bytes, bytes2str
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
+from settings import server_private_key, server_public_key
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+
 
 # Variables for holding information about connections
 connections = []
@@ -20,27 +27,55 @@ class Client(threading.Thread):
         self.signal = signal
         self.error = False
         self.socket.settimeout(0.1)
+        self.client_public_key = None
 
     def __str__(self):
         return str(self.id) + " " + str(self.address)
+
+    def handshaking(self):
+        frames = b''
+        while self.signal:
+            while True:
+                try:
+                    chunk = self.socket.recv(32768)
+                except OSError:
+                    break
+                frames += chunk  
+            if len(frames) == 0:
+                continue
+            else:
+                break
+        
+        self.client_public_key = serialization.load_pem_public_key(
+            frames,
+            backend=default_backend()
+        )
+        
+        pem = server_public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+        self.socket.sendall(pem)
+        
 
     # Attempt to get data from client
     # If unable to, assume client has disconnected and remove him from server data
     # If able to and we get data back, print it in the server
     def run(self):
+        self.handshaking()
         while self.signal:
             try:
                 if self.socket.sendall(b'\0') == 0:
                     raise ConnectionResetError
-                frames = ""
+                frames = b''
                 while True:
                     try:
-                        chunk = self.socket.recv(2048)
+                        chunk = self.socket.recv(32768)
                     except OSError:
                         break
-                    frame = bytes2str(chunk)
-                    frames += str(frame)  # put crypto code here
-                if frames == "":
+                    frames += chunk
+                if len(frames) == 0:
                     continue
                 data = self.decrypt_data(frames)
                 self.display(data)
@@ -53,20 +88,26 @@ class Client(threading.Thread):
                 break
 
     def decrypt_data(self, data):
-        # log("Client %s: '%s' bits received" % (str(self.id), self.frames), 2)
-        # dec_data = server_physical(self.frames)
-        # log("Client %s: '%s' bits decoded" % (str(self.id), dec_data), 2)
-        # de_frame_data = server_dll(dec_data)
-
-        # if de_frame_data != "":
-        #     err_msg = "No error found."
-        #     self.display("Decoded data from client: " + de_frame_data)
-        # else:
-        #     err_msg = "Error in data."
-        return data
+        original_message = server_private_key.decrypt(
+            data,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+        return bytes2str(original_message)
 
     def return_data(self, data):
-        self.socket.sendall(str2bytes(data))
+        encrypted = self.client_public_key.encrypt(
+            str2bytes(data),
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+        self.socket.sendall(encrypted)
 
     def display(self, msg):
         Log.debug("Client " + str(self.id) + ": " + msg)

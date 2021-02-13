@@ -18,16 +18,16 @@ def cryproHandShake(sock):
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
 
-    sock.sendall(str2bytes(pem))
+    sock.sendall(pem)
 
     while True:
         response = sock.recv(32768)
         response = filterForNullTerminators(response)
         if (len(response) > 0):
             break;
-    frames = bytes2str(response)
+    # frames = bytes2str(response)
     server_public_key = serialization.load_pem_public_key(
-        frames,
+        response,
         backend=default_backend()
     )
 

@@ -1,4 +1,7 @@
 from decouple import config
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
 
 #server_keys
 private_key = "server_private_key.pem"
@@ -8,25 +11,23 @@ public_key = "server_public_key.pem"
 SERVER_HOST = config("SERVER_HOST", cast=str, default="localhost")
 SERVER_PORT = config("SERVER_PORT", cast=int, default=8000)
 
-# # verbosity
-# VERBOSITY = config("VERBOSITY", cast=int, default=1)
+#crypto
+def get_private_key():
+    with open(config("SERVER_PRIVATE_KEY"), "rb") as key_file:
+        return serialization.load_pem_private_key(
+            key_file.read(),
+            password=None,
+            backend=default_backend()
+        )
 
-# # Error checking scheme
-# ERROR_CHECKING = config("ERROR_CHECKING", cast=str)
+def get_public_key():
+    with open(config("SERVER_PUBLIC_KEY"), "rb") as key_file:
+        return serialization.load_pem_public_key(
+            key_file.read(),
+            backend=default_backend()
+        )
 
-# # CRC settings
-# CRC_KEY = config("CRC_KEY", cast=str, default="1001")
+server_public_key = get_public_key()
+server_private_key = get_private_key()
 
-# # Error generator scheme
-# ERROR_GENERATOR = config("ERROR_GENERATOR", cast=str)
-# ERROR_MAX_BITS = 2
-# ERROR_DISTRIBUTION = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-#                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-#                       1, 1, 1, 1, 1, 1, 2, 2, 2, 3]
 
-# # Frame Settings
-# PACKET_SIZE = 32
-# FRAMING_SCHEME = config("FRAMING_SCHEME", cast=str)
-
-# # Line Coding Schemes
-# LINE_CODING_SCHEME = config("LINE_CODING_SCHEME", cast=str)

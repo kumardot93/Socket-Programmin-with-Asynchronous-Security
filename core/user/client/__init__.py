@@ -2,7 +2,6 @@ import sys
 import settings
 from core.utils.custom_logger import Log
 from core.user.client.connection import create_connection
-from core.utils
 from core.utils.str_byte_conversion import str2bytes, bytes2str
 from core.utils.dataOps import filterForNullTerminators
 from core.user.client.handshaking import cryproHandShake
@@ -22,7 +21,7 @@ def run_client():
             # Input data to send
             orig_data = input("Enter data you want to send: ")
             encrypted = server_public_key.encrypt(
-                orig_data,
+                str2bytes(orig_data),
                 padding.OAEP(
                     mgf=padding.MGF1(algorithm=hashes.SHA256()),
                     algorithm=hashes.SHA256(),
@@ -30,28 +29,25 @@ def run_client():
                 )
             )
 
-            Log.debug('encrypted data: ', encrypted)
+            Log.debug('encrypted data: %s'%encrypted)
 
-            sock.sendall(str2bytes(encrypted))
+            sock.sendall(encrypted)
 
             while True:
                 response = sock.recv(32768)
                 response = filterForNullTerminators(response)
                 if (len(response) > 0):
                     break;                
-            frames = bytes2str(response)
-            if frames == "":
-                continue
 
             decrypted_message = private_key.decrypt(
-                frames,
+                response,
                 padding.OAEP(
                     mgf=padding.MGF1(algorithm=hashes.SHA256()),
                     algorithm=hashes.SHA256(),
                     label=None
                 )
             )
-            Log.debug('Response: %s'% decrypted_message)
+            Log.debug('Response: %s'% bytes2str(decrypted_message))
 
             
 
