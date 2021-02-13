@@ -1,5 +1,9 @@
 from decouple import config
 
+#server_keys
+private_key = "server_private_key.pem"
+public_key = "server_public_key.pem"
+
 # # server host and port
 # SERVER_HOST = config("SERVER_HOST", cast=str, default="localhost")
 # SERVER_PORT = config("SERVER_PORT", cast=int, default=6783)

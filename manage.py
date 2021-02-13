@@ -1,4 +1,4 @@
-# import sys
+import sys
 # import settings
 # from core.user.server import run_server
 # from core.user.client import run_client
