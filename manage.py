@@ -1,7 +1,7 @@
 import sys
 import settings
-# from core.user.server import run_server
-# from core.user.client import run_client
+from core.user.server import run_server
+from core.user.client import run_client
 
 
 if __name__ == "__main__":
@@ -14,10 +14,8 @@ if __name__ == "__main__":
         settings.SERVER_PORT = int(port)
     command = args[1]
     if command == "server":
-        # run_server()
-        pass
+        run_server()
     elif command == "client":
-        # run_client()
-        pass
+        run_client()
     else:
         raise Exception("Invalid argument [server | client]")

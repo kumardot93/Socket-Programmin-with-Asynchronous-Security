@@ -1,8 +1,6 @@
 import threading
-from core.utils import log
+from core.utils.custom_logger import Log
 from core.utils.str_byte_conversion import str2bytes, bytes2str
-from core.device.datalink.server import server_dll
-from core.device.physical.server import server_physical
 
 # Variables for holding information about connections
 connections = []
@@ -20,8 +18,6 @@ class Client(threading.Thread):
         self.id = id_
         self.name = name
         self.signal = signal
-        self.frames = ""
-        self.num_of_frames = 0
         self.error = False
         self.socket.settimeout(0.1)
 
@@ -34,75 +30,46 @@ class Client(threading.Thread):
     def run(self):
         while self.signal:
             try:
-                if self.socket.sendall(b'11111111') == 0:
+                if self.socket.sendall(b'\0') == 0:
                     raise ConnectionResetError
+                frames = ""
                 while True:
                     try:
                         chunk = self.socket.recv(2048)
                     except OSError:
                         break
                     frame = bytes2str(chunk)
-                    self.frames += str(frame)
-                if self.frames == "":
+                    frames += str(frame)  # put crypto code here
+                if frames == "":
                     continue
-                err_msg = self.check_data()
-                self.display(err_msg)
-                self.return_data(err_msg)
+                data = self.decrypt_data(frames)
+                self.display(data)
+                self.return_data(data)
             except (ConnectionResetError, BrokenPipeError):
-                log("Client " + str(self.address) + " has disconnected")
+                Log.info("Client " + str(self.address) + " has disconnected")
                 self.signal = False
                 self.socket.close()
                 connections.remove(self)
                 break
 
-            # if frame != "":
-            # if self.error:
-            #     if self.num_of_frames > 0:
-            #         self.num_of_frames -= 1
-            #     else:
-            #         self.error = False
-            # else:
-            # if self.num_of_frames == 0:
-            #     self.set_len_rec_frames(frame)
-            # else:
-            #     if len(self.frames) < self.num_of_frames:
-            #         dec_frame = bytes2str(frame)
-            #         self.frames.append(str(dec_frame))
+    def decrypt_data(self, data):
+        # log("Client %s: '%s' bits received" % (str(self.id), self.frames), 2)
+        # dec_data = server_physical(self.frames)
+        # log("Client %s: '%s' bits decoded" % (str(self.id), dec_data), 2)
+        # de_frame_data = server_dll(dec_data)
 
-            # Check data if all the frames are received
-            # if self.num_of_frames != 0 and len(self.frames) == self.num_of_frames:
-            #     err_msg = self.check_data()
-            #     self.display(err_msg)
-            #     self.return_data(err_msg)
-
-    def set_len_rec_frames(self, frame):
-        num_frames_bits = [bytes2str(frame)]
-        num_frames = server_dll(num_frames_bits)
-        self.num_of_frames = int(num_frames)
-
-    def check_data(self):
-        log("Client %s: '%s' bits received" % (str(self.id), self.frames), 2)
-        dec_data = server_physical(self.frames)
-        log("Client %s: '%s' bits decoded" % (str(self.id), dec_data), 2)
-        de_frame_data = server_dll(dec_data)
-
-        if de_frame_data != "":
-            err_msg = "No error found."
-            self.display("Decoded data from client: " + de_frame_data)
-        else:
-            err_msg = "Error in data."
-        self.reset_data()
-        return err_msg
+        # if de_frame_data != "":
+        #     err_msg = "No error found."
+        #     self.display("Decoded data from client: " + de_frame_data)
+        # else:
+        #     err_msg = "Error in data."
+        return data
 
     def return_data(self, data):
         self.socket.sendall(str2bytes(data))
 
-    def reset_data(self):
-        self.frames = ""
-        self.num_of_frames = 0
-
     def display(self, msg):
-        log("Client " + str(self.id) + ": " + msg)
+        Log.debug("Client " + str(self.id) + ": " + msg)
 
 
 def new_connections(sock):
@@ -112,7 +79,7 @@ def new_connections(sock):
             global total_connections
             connections.append(Client(c_sock, address, total_connections, "Name", True))
             connections[len(connections) - 1].start()
-            log("New connection at ID " + str(connections[len(connections) - 1]))
+            Log.debug("New connection at ID " + str(connections[len(connections) - 1]))
             total_connections += 1
     except (KeyboardInterrupt, EOFError):
         pass

@@ -1,6 +1,6 @@
 import socket
 import sys
-from core.utils import log
+from core.utils.custom_logger import Log
 
 
 def create_connection(addr):
@@ -11,5 +11,5 @@ def create_connection(addr):
         sock.connect((host, port))
         return sock
     except (ValueError, OSError):
-        log("Could not make a connection to the server\nQuitting")
+        Log.critical("Could not make a connection to the server\nQuitting")
         sys.exit(0)
