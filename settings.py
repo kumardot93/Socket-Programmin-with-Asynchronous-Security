@@ -30,4 +30,5 @@ def get_public_key():
 server_public_key = get_public_key()
 server_private_key = get_private_key()
 
+LogEncryptedData = config("LOG_ENCRYPTED_DATA", default=False, cast=bool)
 

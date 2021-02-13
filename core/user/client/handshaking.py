@@ -3,6 +3,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from core.utils.str_byte_conversion import str2bytes, bytes2str
 from core.utils.dataOps import filterForNullTerminators
+from core.utils.custom_logger import Log
+import settings
 
 def cryproHandShake(sock):
     private_key = rsa.generate_private_key( # new keys pair
@@ -18,6 +20,10 @@ def cryproHandShake(sock):
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
 
+    if settings.LogEncryptedData:
+        Log.warning('client-public-key:')
+        Log.warning(bytes2str(pem))
+
     sock.sendall(pem)
 
     while True:
@@ -25,7 +31,11 @@ def cryproHandShake(sock):
         response = filterForNullTerminators(response)
         if (len(response) > 0):
             break;
-    # frames = bytes2str(response)
+    
+    if settings.LogEncryptedData:
+        Log.warning('server public key:')
+        Log.warning(bytes2str(response))
+
     server_public_key = serialization.load_pem_public_key(
         response,
         backend=default_backend()

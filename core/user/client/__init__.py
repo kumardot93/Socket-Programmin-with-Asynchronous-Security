@@ -28,8 +28,11 @@ def run_client():
                     label=None
                 )
             )
-
-            Log.debug('encrypted data: %s'%encrypted)
+            
+            if (settings.LogEncryptedData):
+                Log.warning('encrypted sending data :')
+                Log.warning(encrypted)
+                print('\n\n')
 
             sock.sendall(encrypted)
 
@@ -37,7 +40,12 @@ def run_client():
                 response = sock.recv(32768)
                 response = filterForNullTerminators(response)
                 if (len(response) > 0):
-                    break;                
+                    break;
+
+            if settings.LogEncryptedData:
+                Log.warning('encrypted response: ')
+                Log.warning(response)
+                print('\n\n')      
 
             decrypted_message = private_key.decrypt(
                 response,
