@@ -1,7 +1,7 @@
-# Socket-Programmin-with-Asynchronous-Security
+# Socket-Programming-with-Asynchronous-Security
 
 ### Abstract
-Data security is crucial in todays world. This project demonstrates how we can secure the data using asynchronous security. This projetc uses a client server srchitecture. Both clent and server generates a public and private key pair. The server stores both the key for all further communication. During the handshaking the clent generates a public and private key and shares the public key with server. In return server send its public key. For all further communication, server encrypts the data with client's public key and client encodes the data with server's public. Thus only and server can understand the data sent by client and client can understand the data sent by server. Moreover, the server is a multithreaded server. The server initiilzes a new thread for every new connection. 
+Data security is crucial in today's world. This project demonstrates how we can secure the data using asynchronous security. This project uses a client-server architecture. Both client and server generate a public and private key pair: the server stores both the key for further communication. During the handshaking, the client generates a public and private key and shares the public key with the server. In return, the server sends its public key. For all further communication, the server encrypts the data with the client's public key, and the client encrypts the data with the server's public. Thus only and server can understand the data sent by the client, and the client can understand the data sent by the server. Moreover, the server is a multithreaded server. The server initializes a new thread for every new connection. 
 
 ### Requirements
 - Python3.6 or higher
@@ -10,21 +10,21 @@ Data security is crucial in todays world. This project demonstrates how we can s
 - cryptography
 
 ## Setup
-- ***Make sure to activate the virtual enviroment and install all the dependencies***
+- ***Make sure to activate the virtual environment and install all the dependencies***
 
-To setup the project, run the following command
+To set up the project, run the following command.
 ```
 cp .env.example .env
 ```
-To initilize server's public and private key, run the following command
+To initialize server's public and private key, run the following command.
 ```
 python3 key-pair-init.py
 ```
-To run the server, type the following command
+To run the server, type the following command.
 ```
 python3 manage.py server
 ```
-To run the client, type the following command
+To run the client, type the following command.
 ```
 python3 manage.py client
 ```
